@@ -1,15 +1,27 @@
-const Sidebar = () => {
+import React from "react";
+interface Props {
+  setAccount: React.Dispatch<React.SetStateAction<string | undefined>>;
+  account?: string;
+}
+
+const Sidebar = ({ setAccount, account }: Props) => {
+  const isMetaMaskInstalled = false;
 
   return (
     <div className="sidebar">
-      <>
-        <b>Connected as:</b>
-        <br />
-      </>
-      <button>
-        Connect With MetaMask
-      </button>
-      <p>Please install MetaMask</p>
+      {account && (
+        <>
+          <b>Connected as:</b>
+          <br />
+          <small>{account}</small>
+        </>
+      )}
+      {!account && (
+        <button disabled={!isMetaMaskInstalled}>
+          Connect With MetaMask
+        </button>
+      )}
+      {!isMetaMaskInstalled && <p>Please install MetaMask</p>}
     </div>
   );
 };

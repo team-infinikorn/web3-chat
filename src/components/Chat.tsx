@@ -1,33 +1,57 @@
-const Chat = () => {
+import React, { useState } from "react";
+import ChatMessage from "./ChatMessage";
+
+interface Props {
+  account?: string;
+  chatContract: undefined;
+}
+interface Message {
+  address: string;
+  date: string;
+  content: string;
+}
+
+const Chat = ({ account, chatContract }: Props) => {
+  const [textareaContent, setTextareaContent] = useState("");
+  const [txnStatus, setTxnStatus] = useState<string | null>(null);
+  const [messages, setMessages] = useState<Message[]>();
 
   return (
     <div className="chat">
       <div className="chat__messages">
-        <p className="state-message">
-          Connect to the chat in order to see the messages!
-        </p>
-        <p className="state-message">There is no message to display</p>
-        <div className="chat__row">
-          <div className="chat__bubble left">
-            <div className="chat__message left">
-              Hello
-            </div>
-          </div>
-        </div>
-        <div className="chat__row">
-          <div className="chat__bubble right">
-            <div className="chat__message right">
-              Hi
-            </div>
-          </div>
-        </div>
+      {!chatContract && (
+          <p className="state-message">
+            Connect to the chat in order to see the messages!
+          </p>
+        )}
+        {account && messages && messages.length === 0 && (
+          <p className="state-message">There is no message to display</p>
+        )}
+        {messages &&
+          messages.length > 0 &&
+          messages.map((m, i) => (
+            <ChatMessage
+              key={i}
+              ownMessage={m.address === account}
+              address={m.address}
+              message={m.content}
+            />
+          ))}
       </div>
       <div className="chat__actions-wrapper">
-        <p className="state-message">Connect With Metamask to chat!</p>
+        {!account && (
+          <p className="state-message">Connect With Metamask to chat!</p>
+        )}
         <div className="chat__input">
-          <textarea></textarea>
-          <button>
-            {"send message"}
+          <textarea
+            disabled={!!txnStatus || !account}
+            value={textareaContent}
+            onChange={(e) => {
+              setTextareaContent(e.target.value);
+            }}
+          ></textarea>
+          <button disabled={!!txnStatus || !account}>
+            {txnStatus || "send message"}
           </button>
         </div>
       </div>
