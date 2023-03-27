@@ -1,21 +1,40 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ChatMessage from "./ChatMessage";
 import { ethers } from "ethers";
 
-interface Props {
-  account?: string;
-  chatContract: ethers.Contract | undefined;
-}
 interface Message {
   address: string;
   date: string;
   content: string;
+}
+interface Props {
+  account?: string;
+  chatContract: ethers.Contract | undefined;
 }
 
 const Chat = ({ account, chatContract }: Props) => {
   const [textareaContent, setTextareaContent] = useState("");
   const [txnStatus, setTxnStatus] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>();
+
+  const getMessages = async () => {
+    if (!chatContract || account) return;
+
+    const messages = await chatContract.getMessages();
+    setMessages(() => {
+      return messages.map((w: any) => ({
+        address: w.sender,
+        date: w.timestamp._hex,
+        content: w.content,
+      }));
+    });
+  };
+
+  useEffect(() => {
+    // Let's call `getMessages` if there is an instance of the chatContract and that `message`is undefined
+    if (!chatContract || messages) return;
+    getMessages();
+  }, [chatContract]);
 
   return (
     <div className="chat">
