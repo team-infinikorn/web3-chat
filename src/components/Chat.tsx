@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import ChatMessage from "./ChatMessage";
+import { ethers } from "ethers";
 
 interface Props {
   account?: string;
-  chatContract: undefined;
+  chatContract: ethers.Contract | undefined;
 }
 interface Message {
   address: string;
