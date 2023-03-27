@@ -1,12 +1,7 @@
 import React, { useState, useEffect } from "react";
+import { Message } from "../types";
 import ChatMessage from "./ChatMessage";
 import { ethers } from "ethers";
-
-interface Message {
-  address: string;
-  date: string;
-  content: string;
-}
 interface Props {
   account?: string;
   chatContract: ethers.Contract | undefined;
@@ -30,16 +25,51 @@ const Chat = ({ account, chatContract }: Props) => {
     });
   };
 
+  const setupMessageListener = (): ethers.Contract | void => {
+    if (!chatContract) return;
+
+    const msgListener = chatContract.on(
+      "NewMessage",
+      (address, timestamp, content, _style) => {
+        setMessages((prev) => {
+          const newMessage = {
+            address,
+            date: timestamp._hex,
+            content,
+          };
+          return prev ? [...prev, newMessage] : [newMessage];
+        });
+      }
+    );
+
+    return msgListener;
+  };
+
+  const sendMessage = async () => {
+    if (!chatContract) return;
+    try {
+      setTxnStatus("WAIT");
+      const messageTxn = await chatContract.sendMessage(textareaContent);
+      setTxnStatus("SENDING");
+      await messageTxn.wait();
+    } catch (e) {
+      console.warn("Transaction failed with error", e);
+    } finally {
+      setTextareaContent("");
+      setTxnStatus(null);
+    }
+  };
+
   useEffect(() => {
-    // Let's call `getMessages` if there is an instance of the chatContract and that `message`is undefined
     if (!chatContract || messages) return;
     getMessages();
+    setupMessageListener();
   }, [chatContract]);
 
   return (
     <div className="chat">
       <div className="chat__messages">
-      {!chatContract && (
+        {!chatContract && (
           <p className="state-message">
             Connect to the chat in order to see the messages!
           </p>
@@ -70,7 +100,7 @@ const Chat = ({ account, chatContract }: Props) => {
               setTextareaContent(e.target.value);
             }}
           ></textarea>
-          <button disabled={!!txnStatus || !account}>
+          <button onClick={sendMessage} disabled={!!txnStatus || !account}>
             {txnStatus || "send message"}
           </button>
         </div>
